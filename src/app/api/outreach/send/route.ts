@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import * as brevo from '@getbrevo/brevo'
+import { BrevoClient } from '@getbrevo/brevo'
 
 export async function POST(request: Request) {
   try {
@@ -15,18 +15,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, mock: true })
     }
 
-    const apiInstance = new brevo.TransactionalEmailsApi()
-    apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY)
+    const client = new BrevoClient({ apiKey: process.env.BREVO_API_KEY })
 
-    const sendSmtpEmail = new brevo.SendSmtpEmail()
-    sendSmtpEmail.subject = subject
-    sendSmtpEmail.htmlContent = `<div style="font-family: sans-serif; white-space: pre-wrap;">${content}</div>`
-    sendSmtpEmail.sender = { name: "Gitpitch Recruiter", email: "hello@gitpitch.demo" }
-    sendSmtpEmail.to = [{ email: toEmail }]
+    await client.transactionalEmails.sendTransacEmail({
+      subject,
+      htmlContent: `<div style="font-family: sans-serif; white-space: pre-wrap;">${content}</div>`,
+      sender: { name: "Gitpitch Recruiter", email: "hello@gitpitch.demo" },
+      to: [{ email: toEmail }],
+    })
 
-    const result = await apiInstance.sendTransacEmail(sendSmtpEmail)
-
-    return NextResponse.json({ success: true, messageId: result.body.messageId })
+    return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('Brevo Send Error:', error)
     return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })

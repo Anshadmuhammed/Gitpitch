@@ -5,7 +5,7 @@ import { DeveloperCard } from "@/components/developers/DeveloperCard";
 import { DeveloperProfile as DeveloperProfileModal } from "@/components/developers/DeveloperProfile";
 import { DeveloperProfile as ProfileType } from "@/types";
 import { Loader2 } from "lucide-react";
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
@@ -13,7 +13,7 @@ export default function DashboardPage() {
   const [profiles, setProfiles] = useState<ProfileType[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const fetchProfiles = async (filters: { languages?: string[]; city?: string; open_to_work?: boolean }) => {
     setLoading(true);

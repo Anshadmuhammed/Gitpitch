@@ -67,15 +67,15 @@ export function DeveloperProfile({
             <div className="grid grid-cols-3 gap-4 mb-8">
                <div className="bg-[#0a0a08] p-4 rounded-lg border border-white/5">
                  <div className="text-white/40 text-xs mb-1 flex items-center gap-1"><Star size={12}/> Total Stars</div>
-                 <div className="text-xl font-medium">{formatNumber(profile.total_stars)}</div>
+                 <div className="text-xl font-medium">{formatNumber(profile.total_stars ?? 0)}</div>
                </div>
                <div className="bg-[#0a0a08] p-4 rounded-lg border border-white/5">
                  <div className="text-white/40 text-xs mb-1 flex items-center gap-1"><Users size={12}/> Followers</div>
-                 <div className="text-xl font-medium">{formatNumber(profile.followers)}</div>
+                 <div className="text-xl font-medium">{formatNumber(profile.followers ?? 0)}</div>
                </div>
                <div className="bg-[#0a0a08] p-4 rounded-lg border border-white/5">
                  <div className="text-white/40 text-xs mb-1 flex items-center gap-1"><Code2 size={12}/> Top Lang</div>
-                 <div className="text-sm font-medium pt-1 truncate">{profile.top_languages[0] || 'N/A'}</div>
+                 <div className="text-sm font-medium pt-1 truncate">{profile.top_languages?.[0] || 'N/A'}</div>
                </div>
             </div>
 
@@ -94,7 +94,7 @@ export function DeveloperProfile({
             <div>
                <h3 className="text-sm font-medium text-white/50 uppercase tracking-widest mb-4">Top Repositories</h3>
                <div className="space-y-3">
-                 {profile.top_repos?.map((repo) => (
+                 {profile.top_repos?.map((repo: any) => (
                    <div key={repo.name} className="bg-[#0a0a08] p-4 rounded-lg border border-white/5">
                      <div className="flex justify-between items-start mb-2">
                        <a href={repo.url} target="_blank" rel="noreferrer" className="text-base font-medium text-[#c8f060] hover:underline">
