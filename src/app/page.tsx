@@ -16,8 +16,8 @@ export default function LandingPage() {
         </Reveal>
         
         <Reveal>
-          <h1 className="display-heading max-w-4xl mx-auto mb-6">
-            India's best engineers aren't on LinkedIn. <br />
+          <h1 className="display-heading max-w-4xl mx-auto mb-6 px-4">
+            India's best engineers aren't on LinkedIn. <br className="hidden sm:block" />
             <span className="text-[#c8f060] italic">They're on GitHub.</span>
           </h1>
         </Reveal>
@@ -94,40 +94,40 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <Reveal className="relative">
+          <Reveal className="relative mt-20 lg:mt-0 px-4 sm:px-0">
             <div className="absolute -inset-4 bg-[#c8f060]/5 rounded-[2rem] blur-3xl -z-10"></div>
             
             {/* Mock Dev Card */}
-            <div className="card p-6 mb-6 transform -rotate-2 relative z-10 shadow-2xl bg-[#111110]">
+            <div className="card p-6 mb-6 transform lg:-rotate-2 relative z-10 shadow-2xl bg-[#111110] max-w-sm mx-auto lg:mx-0">
               <div className="flex gap-4 items-start mb-6">
-                <div className="w-12 h-12 rounded-full bg-zinc-800"></div>
-                <div>
-                  <div className="font-medium">Avinash S.</div>
-                  <div className="text-xs text-white/50">@avinassh • Bengaluru</div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-800 shrink-0"></div>
+                <div className="min-w-0">
+                  <div className="font-medium truncate">Avinash S.</div>
+                  <div className="text-xs text-white/50 truncate">@avinassh • Bengaluru</div>
                 </div>
-                <div className="ml-auto px-2 py-1 bg-[#c8f060]/10 text-[#c8f060] text-xs rounded-md">98% Match</div>
+                <div className="ml-auto px-2 py-1 bg-[#c8f060]/10 text-[#c8f060] text-[10px] sm:text-xs rounded-md whitespace-nowrap">98% Match</div>
               </div>
               <div className="flex flex-wrap gap-2 mb-4">
-                <span className="px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-white/70">Go</span>
-                <span className="px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-white/70">Python</span>
-                <span className="px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-white/70">Docker</span>
+                <span className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] sm:text-xs text-white/70">Go</span>
+                <span className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] sm:text-xs text-white/70">Python</span>
+                <span className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] sm:text-xs text-white/70">Docker</span>
               </div>
-              <div className="p-3 bg-[#0a0a08] border border-white/5 rounded-lg text-xs font-mono text-white/60">
+              <div className="p-3 bg-[#0a0a08] border border-white/5 rounded-lg text-[10px] sm:text-xs font-mono text-white/60">
                 <span className="text-[#c8f060]">★ 1.2k</span> top repo: `awesome-go-india`
               </div>
             </div>
-
+ 
             {/* Mock Terminal/AI */}
-            <div className="card p-6 transform rotate-1 relative z-20 shadow-2xl bg-[#0a0a08] border-white/10 ml-8">
+            <div className="card p-6 transform lg:rotate-1 relative z-20 shadow-2xl bg-[#0a0a08] border-white/10 ml-4 lg:ml-8 max-w-sm mx-auto lg:mx-0 mt-[-2rem] lg:mt-0">
               <div className="flex gap-2 mb-4 border-b border-white/10 pb-4">
-                <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
               </div>
-              <p className="text-sm text-white/80 font-mono mb-2">
+              <p className="text-xs sm:text-sm text-white/80 font-mono mb-2">
                 <span className="text-[#c8f060]">{"{"} subject:</span> "Chat about your awesome-go repo?"
               </p>
-              <p className="text-sm text-white/60 font-mono leading-relaxed">
+              <p className="text-xs sm:text-sm text-white/60 font-mono leading-relaxed">
                 Hi Avinash, loved your recent commits to `awesome-go-india`. We are building a high-throughput backend in Go at Gitpitch and I think you'd be a great fit...
               </p>
             </div>

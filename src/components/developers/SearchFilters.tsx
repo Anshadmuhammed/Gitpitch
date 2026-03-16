@@ -28,7 +28,7 @@ export function SearchFilters({
   const popLangs = ["TypeScript", "Python", "Go", "Rust", "React", "Node"];
 
   return (
-    <div className="w-72 bg-[#111110] border-r border-[rgba(255,255,255,0.08)] h-[calc(100vh-64px)] overflow-y-auto hidden lg:block p-6">
+    <div className="space-y-8">
       <div className="mb-6">
         <h3 className="text-sm font-medium mb-3">Top Languages</h3>
         <div className="space-y-2">

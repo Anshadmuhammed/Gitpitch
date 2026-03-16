@@ -10,9 +10,9 @@ const NAV_ITEMS = [
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onNavClick }: { onNavClick?: () => void }) {
   return (
-    <aside className="w-64 border-r border-[rgba(255,255,255,0.08)] bg-[#0a0a08] flex flex-col h-[calc(100vh-64px)] overflow-y-auto">
+    <aside className="w-full flex flex-col h-full overflow-y-auto">
       <div className="p-6">
         <h2 className="text-xs font-medium text-white/50 uppercase tracking-widest mb-4">Dashboard</h2>
         <nav className="space-y-2">
@@ -20,6 +20,7 @@ export function Sidebar() {
             <Link 
               key={item.href} 
               href={item.href}
+              onClick={onNavClick}
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors"
             >
               <item.icon size={18} />

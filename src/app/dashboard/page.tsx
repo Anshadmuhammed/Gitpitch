@@ -4,8 +4,9 @@ import { SearchFilters } from "@/components/developers/SearchFilters";
 import { DeveloperCard } from "@/components/developers/DeveloperCard";
 import { DeveloperProfile as DeveloperProfileModal } from "@/components/developers/DeveloperProfile";
 import { DeveloperProfile as ProfileType } from "@/types";
-import { Loader2 } from "lucide-react";
+import { Loader2, Filter, X } from "lucide-react";
 import { createClient } from '@/utils/supabase/client'
+import * as Dialog from "@radix-ui/react-dialog";
 import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
@@ -52,13 +53,44 @@ export default function DashboardPage() {
   const selectedProfile = profiles.find(p => p.id === selectedProfileId) || null;
 
   return (
-    <div className="flex h-full">
-      <SearchFilters onFilterChange={fetchProfiles} />
+    <div className="flex h-full relative">
+      {/* Desktop Search Sidebar */}
+      <div className="hidden lg:block w-72 bg-[#111110] border-r border-white/5 p-6 h-full overflow-y-auto">
+        <SearchFilters onFilterChange={fetchProfiles} />
+      </div>
       
       <div className="flex-1 p-6 lg:p-10 overflow-y-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-serif mb-2">Discover Top Talent</h1>
-          <p className="text-white/50">Search {profiles.length} Indian developers who skipped LinkedIn today.</p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 mt-4 lg:mt-0">
+          <div>
+            <h1 className="text-3xl font-serif mb-2">Discover Top Talent</h1>
+            <p className="text-white/50">Search {profiles.length} Indian developers who skipped LinkedIn today.</p>
+          </div>
+          
+          {/* Mobile Filter Toggle */}
+          <Dialog.Root>
+            <Dialog.Trigger asChild>
+              <button className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
+                <Filter size={16} />
+                Filters
+              </button>
+            </Dialog.Trigger>
+            <Dialog.Portal>
+              <Dialog.Overlay className="fixed inset-0 bg-[#0a0a08]/90 backdrop-blur-sm z-50 animate-in fade-in duration-300" />
+              <Dialog.Content className="fixed right-0 top-0 h-full w-[85%] max-w-[320px] bg-[#111110] p-6 z-50 animate-in slide-in-from-right duration-300 outline-none">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-xl font-serif">Filters</h2>
+                  <Dialog.Close asChild>
+                    <button className="p-2 text-white/50 hover:text-white transition-colors">
+                      <X size={20} />
+                    </button>
+                  </Dialog.Close>
+                </div>
+                <div className="overflow-y-auto h-[calc(100vh-100px)]">
+                   <SearchFilters onFilterChange={fetchProfiles} />
+                </div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
         </div>
 
         {!initialLoaded && loading ? (
