@@ -35,8 +35,22 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
     } else {
-      router.push("/dashboard");
-      router.refresh();
+      // Get role to redirect
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        if (userData?.role === 'developer') {
+          router.push("/developer");
+        } else {
+          router.push("/dashboard");
+        }
+        router.refresh();
+      }
     }
   };
 

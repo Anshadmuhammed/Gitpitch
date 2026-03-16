@@ -41,7 +41,18 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/login?error=${error.message}`)
     }
 
-    console.log('User logged in:', data.user?.email)
+    if (data.user) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+
+      if (userData?.role === 'developer') {
+        return NextResponse.redirect(`${origin}/developer`)
+      }
+    }
+
     return NextResponse.redirect(`${origin}/dashboard`)
 
   } catch (err) {

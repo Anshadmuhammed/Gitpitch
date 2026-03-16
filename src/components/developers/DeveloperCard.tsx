@@ -1,13 +1,20 @@
 "use client";
 import { DeveloperProfile } from "@/types";
 import { MapPin, Code2, Star, Github } from "lucide-react";
+import { clsx } from "clsx";
 
 export function DeveloperCard({ 
   profile, 
-  onView 
+  onView,
+  isShortlisted,
+  onShortlist,
+  customAction
 }: { 
   profile: DeveloperProfile & { users?: { name: string; avatar_url: string } }; 
   onView: (id: string) => void;
+  isShortlisted?: boolean;
+  onShortlist?: () => void;
+  customAction?: { label: string; onClick: () => void };
 }) {
   // Mock match score randomly between 75-98 for the demo
   const matchScore = Math.floor(Math.random() * (98 - 75 + 1) + 75);
@@ -66,9 +73,26 @@ export function DeveloperCard({
           >
             View Profile
           </button>
-          <button className="flex-1 btn-primary !py-2 !text-xs !px-0 flex items-center justify-center bg-white text-black border border-transparent hover:bg-white/90">
-            Shortlist
-          </button>
+           {customAction ? (
+            <button 
+              onClick={(e) => { e.stopPropagation(); customAction.onClick(); }}
+              className="flex-1 !py-2 !text-xs !px-0 flex items-center justify-center bg-[#c8f060] text-black font-semibold rounded hover:bg-[#b0d650] transition-colors"
+            >
+              {customAction.label}
+            </button>
+          ) : (
+            <button 
+              onClick={onShortlist}
+              className={clsx(
+                "flex-1 !py-2 !text-xs !px-0 flex items-center justify-center transition-all",
+                isShortlisted 
+                  ? "bg-[#c8f060]/10 text-[#c8f060] border border-[#c8f060]/20" 
+                  : "btn-primary bg-white text-black border border-transparent hover:bg-white/90"
+              )}
+            >
+              {isShortlisted ? "Shortlisted ✓" : "Shortlist"}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -1,32 +1,49 @@
 import { NextResponse } from 'next/server'
-import { BrevoClient } from '@getbrevo/brevo'
+import { createClient } from '@/utils/supabase/server'
 
 export async function POST(request: Request) {
   try {
-    const { toEmail, subject, content } = await request.json()
+    const { developer_id, subject, body } = await request.json()
+    const supabase = await createClient()
 
-    if (!toEmail || !subject || !content) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // 1. Check credits
+    const { data: userData } = await supabase
+      .from('users')
+      .select('credits')
+      .eq('id', user.id)
+      .single()
+
+    if (!userData || (userData.credits || 0) <= 0) {
+      return NextResponse.json({ error: 'Insufficent credits' }, { status: 403 })
     }
 
-    if (!process.env.BREVO_API_KEY || process.env.BREVO_API_KEY.includes('your_')) {
-      // Mock sending if API key isn't real
-      console.log('Mock email sent to', toEmail);
-      return NextResponse.json({ success: true, mock: true })
-    }
+    // 2. Save campaign
+    const { error: campaignError } = await supabase
+      .from('outreach_campaigns')
+      .insert({
+        recruiter_id: user.id,
+        developer_id,
+        subject,
+        body,
+        status: 'sent'
+      })
 
-    const client = new BrevoClient({ apiKey: process.env.BREVO_API_KEY })
+    if (campaignError) throw campaignError
 
-    await client.transactionalEmails.sendTransacEmail({
-      subject,
-      htmlContent: `<div style="font-family: sans-serif; white-space: pre-wrap;">${content}</div>`,
-      sender: { name: "Gitpitch Recruiter", email: "hello@gitpitch.demo" },
-      to: [{ email: toEmail }],
-    })
+    // 3. Deduct credit
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ credits: (userData.credits || 0) - 1 })
+      .eq('id', user.id)
+
+    if (updateError) throw updateError
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    console.error('Brevo Send Error:', error)
-    return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
+  } catch (err: any) {
+    console.error('Send error:', err)
+    return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

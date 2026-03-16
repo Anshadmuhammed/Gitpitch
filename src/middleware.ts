@@ -27,13 +27,40 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+  const pathname = request.nextUrl.pathname
+
+  // Protected routes check
+  if (!user && (pathname.startsWith('/dashboard') || pathname.startsWith('/developer') || pathname.startsWith('/onboarding'))) {
     return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  if (user) {
+    // Get user role from public.users table
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const role = userData?.role
+
+    // If user is logged in and tries to access login/signup, redirect to their dashboard
+    if (pathname === '/login' || pathname === '/signup') {
+      return NextResponse.redirect(new URL(role === 'developer' ? '/developer' : '/dashboard', request.url))
+    }
+
+    // Role-based path protection
+    if (role === 'developer' && pathname.startsWith('/dashboard')) {
+      return NextResponse.redirect(new URL('/developer', request.url))
+    }
+    if (role === 'recruiter' && pathname.startsWith('/developer')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
   }
 
   return supabaseResponse
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 }

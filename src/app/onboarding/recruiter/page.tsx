@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function RecruiterOnboardingPage() {
   const [company, setCompany] = useState("");
-  const [website, setWebsite] = useState("");
+  const [companySize, setCompanySize] = useState("");
+  const [hiringRoles, setHiringRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -23,9 +24,12 @@ export default function RecruiterOnboardingPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Unauthorized");
 
-      // For simplicity in UI demo, we might store this in users table or a recruiter_profiles table.
-      // Assuming users table has metadata JSON column or we just skip saving for now since it's a demo.
-      // We will just update users table if we had columns, else skip to dashboard.
+      // Save to public.users or recruiter_profiles
+      await supabase.from('users').update({
+        company_name: company,
+        company_size: companySize,
+        hiring_roles: hiringRoles
+      }).eq('id', session.user.id);
 
       router.push("/dashboard");
       router.refresh();
@@ -44,7 +48,7 @@ export default function RecruiterOnboardingPage() {
           Tell us a bit about your company before you start searching for top developers.
         </p>
 
-        <form onSubmit={handleFinish} className="space-y-4">
+        <form onSubmit={handleFinish} className="space-y-6">
           <div>
             <label className="block text-xs font-medium text-white/70 uppercase tracking-widest mb-2">
               Company Name
@@ -64,24 +68,45 @@ export default function RecruiterOnboardingPage() {
 
           <div>
             <label className="block text-xs font-medium text-white/70 uppercase tracking-widest mb-2">
-              Company Website (Optional)
+              Company Size
             </label>
-            <div className="relative">
-              <Globe className="absolute left-3 top-3.5 text-white/40 w-4 h-4" />
-              <input 
-                type="url"
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-                className="w-full bg-[#0a0a08] border border-white/10 rounded-lg px-4 py-3 pl-10 text-sm focus:outline-none focus:border-[#c8f060] transition-colors"
-                placeholder="https://"
-              />
+            <select 
+              value={companySize}
+              onChange={(e) => setCompanySize(e.target.value)}
+              className="w-full bg-[#0a0a08] border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#c8f060] transition-colors text-white/70 appearance-none"
+              required
+            >
+              <option value="">Select size...</option>
+              <option value="1-10">1-10 employees</option>
+              <option value="11-50">11-50 employees</option>
+              <option value="51-200">51-200 employees</option>
+              <option value="201-500">201-500 employees</option>
+              <option value="500+">500+ employees</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-white/70 uppercase tracking-widest mb-2">
+              What roles are you hiring for?
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {["Frontend", "Backend", "Fullstack", "Mobile", "DevOps", "AI/ML"].map(role => (
+                <button 
+                  key={role}
+                  type="button"
+                  onClick={() => setHiringRoles(prev => prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role])}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-medium border transition-colors ${hiringRoles.includes(role) ? 'bg-[#c8f060] border-[#c8f060] text-black' : 'border-white/10 text-white/50 hover:border-white/20'}`}
+                >
+                  {role}
+                </button>
+              ))}
             </div>
           </div>
 
           {error && <div className="text-red-400 text-sm bg-red-400/10 p-3 rounded-md">{error}</div>}
 
           <button disabled={loading || !company.trim()} className="w-full btn-primary mt-6 tracking-wide">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Go to Dashboard ->"}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Complete Onboarding"}
           </button>
         </form>
       </div>

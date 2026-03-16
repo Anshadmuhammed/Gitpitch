@@ -5,8 +5,10 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { LogoutButton } from "./LogoutButton";
 
-export function NavbarClient({ session }: { session: any }) {
+export function NavbarClient({ session, role }: { session: any, role?: string | null }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const dashboardHref = role === 'developer' ? '/developer' : '/dashboard';
 
   return (
     <nav className="border-b border-[rgba(255,255,255,0.08)] bg-[#0a0a08]/80 backdrop-blur-md sticky top-0 z-50">
@@ -28,7 +30,7 @@ export function NavbarClient({ session }: { session: any }) {
             </>
           ) : (
             <>
-              <Link href="/dashboard" className="text-white/60 hover:text-white transition-colors">
+              <Link href={dashboardHref} className="text-white/60 hover:text-white transition-colors">
                 Dashboard
               </Link>
               <LogoutButton />
@@ -68,7 +70,7 @@ export function NavbarClient({ session }: { session: any }) {
           ) : (
             <div className="flex flex-col gap-4">
               <Link 
-                href="/dashboard" 
+                href={dashboardHref}
                 onClick={() => setIsOpen(false)}
                 className="text-lg text-white/70 hover:text-white py-2"
               >

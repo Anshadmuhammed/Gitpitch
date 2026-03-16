@@ -26,7 +26,7 @@ export default function DeveloperOnboardingPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to sync GitHub profile");
 
-      router.push("/dashboard");
+      router.push("/developer");
       router.refresh();
     } catch (err: any) {
       setError(err.message);

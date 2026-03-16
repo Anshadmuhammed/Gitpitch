@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
-import { fetchGitHubProfile } from '@/lib/github'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -8,48 +7,54 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
-    const { githubUsername, tone, companyName } = await request.json()
+    const { developer, roleDescription, tone } = await request.json()
 
-    if (!githubUsername) {
-      return NextResponse.json({ error: 'GitHub username required' }, { status: 400 })
-    }
-
-    // Attempt to fetch profile details to make it personalized
-    let profileDetails = '';
-    try {
-       const profile = await fetchGitHubProfile(githubUsername);
-       profileDetails = `Top languages: ${profile.top_languages.join(', ')}. Top repo: ${profile.top_repos[0]?.name} (${profile.top_repos[0]?.stars} stars). Bio: ${profile.bio}`;
-    } catch (e) {
-       console.log('Could not fetch github profile for generation', e);
-    }
-
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.includes('your_')) {
-      // Mock generation if no API key
-      return NextResponse.json({
-        subject: `Loved your work on GitHub, ${githubUsername}!`,
-        body: `Hi ${githubUsername},\\n\\nI came across your GitHub profile and was really impressed. ${profileDetails}\\n\\nWe are hiring at ${companyName} and would love to chat!\\n\\nBest,\nRecruiting Team`
-      })
+    if (!developer || !roleDescription) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
     const prompt = `
-      Write a concise, ${tone || 'professional'} cold recruiting email to a software developer with the GitHub username '${githubUsername}'.
-      The email is from an engineering manager at '${companyName}'.
-      Use the following GitHub context to personalize it: ${profileDetails}.
-      Keep it under 150 words. Do not use generic placeholders like [Your Name].
-      Output as JSON with "subject" and "body" fields.
-    `;
+      You are a world-class tech recruiter. Write a highly personalized outreach email to a developer based on their GitHub profile.
+      
+      Developer Details:
+      Name: ${developer.name}
+      GitHub: @${developer.github_username}
+      Bio: ${developer.bio}
+      Top Languages: ${developer.top_languages?.join(', ')}
+      Key Repos: ${developer.top_repos?.slice(0, 3).map((r: any) => r.name).join(', ')}
+      
+      Role Description:
+      ${roleDescription}
+      
+      Email Tone: ${tone}
+      
+      Requirements:
+      1. Mention their specific GitHub projects or languages.
+      2. Keep it concise (under 200 words).
+      3. Focus on why they are a great fit for the role.
+      4. Suggest a low-friction next step (quick chat).
+      
+      Output format:
+      Subject: [Compelling Subject Line]
+      Body: [Email Body]
+    `
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" }
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
     })
 
-    const result = JSON.parse(response.choices[0].message.content || '{}')
+    const text = response.choices[0].message.content || ''
+    const subjectMatch = text.match(/Subject: (.*)/)
+    const bodyMatch = text.match(/Body: ([\s\S]*)/)
 
-    return NextResponse.json(result)
-  } catch (error: any) {
-    console.error('OpenAI Generate Error:', error)
-    return NextResponse.json({ error: 'Failed to generate outreach' }, { status: 500 })
+    return NextResponse.json({
+      subject: subjectMatch ? subjectMatch[1].trim() : "Exciting opportunity at Gitpitch",
+      body: bodyMatch ? bodyMatch[1].trim() : text,
+    })
+  } catch (err: any) {
+    console.error('OpenAI error:', err)
+    return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
