@@ -21,7 +21,7 @@ export function OutreachModal({
   const [tone, setTone] = useState("Professional");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<{ subject: string; body: string } | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<{ id: string; subject: string; body: string } | null>(null);
   const [error, setError] = useState("");
 
   const handleGenerate = async () => {
@@ -30,7 +30,11 @@ export function OutreachModal({
     try {
       const res = await fetch("/api/outreach/generate", {
         method: "POST",
-        body: JSON.stringify({ developer, roleDescription, tone }),
+        body: JSON.stringify({ 
+          developer_id: developer.id, 
+          job_description: roleDescription, 
+          tone: tone.toLowerCase() 
+        }),
         headers: { "Content-Type": "application/json" }
       });
       const data = await res.json();
@@ -47,18 +51,18 @@ export function OutreachModal({
     if (credits <= 0) return;
     setIsSending(true);
     try {
-      // In a real app, this would deduct credits in the DB
-      // For now we'll simulate it and assume onSent updates UI
       const res = await fetch("/api/outreach/send", {
         method: "POST",
         body: JSON.stringify({ 
-          developer_id: developer.id, 
-          subject: generatedContent?.subject,
-          body: generatedContent?.body
+          campaign_id: generatedContent?.id,
+          developer_email: developer.email 
         }),
         headers: { "Content-Type": "application/json" }
       });
       
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
       onSent();
       onOpenChange(false);
     } catch (err: any) {

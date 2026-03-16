@@ -3,47 +3,35 @@ import { createClient } from '@/utils/supabase/server'
 
 export async function POST(request: Request) {
   try {
-    const { developer_id, subject, body } = await request.json()
+    const { campaign_id, developer_email } = await request.json()
     const supabase = await createClient()
-
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // 1. Check credits
-    const { data: userData } = await supabase
-      .from('users')
-      .select('credits')
-      .eq('id', user.id)
+    const { data: recruiter } = await supabase
+      .from('recruiter_profiles')
+      .select('id, outreach_credits')
+      .eq('user_id', user?.id)
       .single()
 
-    if (!userData || (userData.credits || 0) <= 0) {
-      return NextResponse.json({ error: 'Insufficent credits' }, { status: 403 })
+    if (!recruiter || (recruiter.outreach_credits || 0) < 1) {
+      return NextResponse.json({ error: 'No credits remaining' }, { status: 402 })
     }
 
-    // 2. Save campaign
-    const { error: campaignError } = await supabase
+    // 1. Deduct credit
+    await supabase
+      .from('recruiter_profiles')
+      .update({ outreach_credits: (recruiter.outreach_credits || 0) - 1 })
+      .eq('id', recruiter.id)
+
+    // 2. Update campaign status
+    await supabase
       .from('outreach_campaigns')
-      .insert({
-        recruiter_id: user.id,
-        developer_id,
-        subject,
-        body,
-        status: 'sent'
-      })
+      .update({ status: 'sent', sent_at: new Date().toISOString() })
+      .eq('id', campaign_id)
 
-    if (campaignError) throw campaignError
-
-    // 3. Deduct credit
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ credits: (userData.credits || 0) - 1 })
-      .eq('id', user.id)
-
-    if (updateError) throw updateError
-
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, credits_remaining: (recruiter.outreach_credits || 0) - 1 })
   } catch (err: any) {
-    console.error('Send error:', err)
+    console.error('Send outreach error:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

@@ -1,60 +1,77 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@/utils/supabase/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export async function POST(request: Request) {
   try {
-    const { developer, roleDescription, tone } = await request.json()
+    const { developer_id, job_description, tone } = await request.json()
+    
+    const supabase = await createClient()
+    
+    const { data: dev } = await supabase
+      .from('developer_profiles')
+      .select('*')
+      .eq('id', developer_id)
+      .single()
 
-    if (!developer || !roleDescription) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!dev) return NextResponse.json({ error: 'Developer not found' }, { status: 404 })
+
+    const toneMap = {
+      professional: 'formal and professional',
+      friendly: 'warm and conversational', 
+      direct: 'brief and direct'
     }
 
     const prompt = `
-      You are a world-class tech recruiter. Write a highly personalized outreach email to a developer based on their GitHub profile.
-      
-      Developer Details:
-      Name: ${developer.name}
-      GitHub: @${developer.github_username}
-      Bio: ${developer.bio}
-      Top Languages: ${developer.top_languages?.join(', ')}
-      Key Repos: ${developer.top_repos?.slice(0, 3).map((r: any) => r.name).join(', ')}
-      
-      Role Description:
-      ${roleDescription}
-      
-      Email Tone: ${tone}
-      
-      Requirements:
-      1. Mention their specific GitHub projects or languages.
-      2. Keep it concise (under 200 words).
-      3. Focus on why they are a great fit for the role.
-      4. Suggest a low-friction next step (quick chat).
-      
-      Output format:
-      Subject: [Compelling Subject Line]
-      Body: [Email Body]
-    `
+Developer: ${dev.github_username}
+Top languages: ${dev.top_languages?.join(', ')}
+Top repos: ${dev.top_repos?.slice(0,3).map((r: any) => 
+  `${r.name} (${r.stars}⭐) — ${r.description}`).join('; ')}
+Bio: ${dev.bio}
+Role being hired for: ${job_description}
+Tone: ${toneMap[tone as keyof typeof toneMap] || 'friendly'}
+
+Write a cold outreach email. Max 120 words.
+Reference at least 2 specific repos or languages.
+First line is subject, then ---, then body.
+End with a low-pressure CTA.
+  `
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
+      messages: [
+        { role: 'system', content: 'You are writing cold outreach emails for Indian startup recruiters. Be human, warm, specific.' },
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 300,
+      temperature: 0.8
     })
 
     const text = response.choices[0].message.content || ''
-    const subjectMatch = text.match(/Subject: (.*)/)
-    const bodyMatch = text.match(/Body: ([\s\S]*)/)
+    const parts = text.split('---')
+    const subject = parts[0].replace('Subject:', '').trim()
+    const body = parts.slice(1).join('').trim()
 
-    return NextResponse.json({
-      subject: subjectMatch ? subjectMatch[1].trim() : "Exciting opportunity at Gitpitch",
-      body: bodyMatch ? bodyMatch[1].trim() : text,
-    })
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: recruiter } = await supabase
+      .from('recruiter_profiles')
+      .select('id')
+      .eq('user_id', user?.id)
+      .single()
+
+    const { data: campaign } = await supabase.from('outreach_campaigns').insert({
+      recruiter_id: recruiter?.id,
+      developer_id,
+      subject,
+      body,
+      status: 'draft'
+    }).select('id').single()
+
+    return NextResponse.json({ id: campaign?.id, subject, body })
   } catch (err: any) {
-    console.error('OpenAI error:', err)
+    console.error('Outreach generation error:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
