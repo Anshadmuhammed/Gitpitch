@@ -12,6 +12,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [profiles, setProfiles] = useState<ProfileType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoaded, setInitialLoaded] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const supabase = createClient();
 
@@ -32,6 +33,7 @@ export default function DashboardPage() {
       console.error(err);
     } finally {
       setLoading(false);
+      setInitialLoaded(true);
     }
   };
 
@@ -59,7 +61,7 @@ export default function DashboardPage() {
           <p className="text-white/50">Search {profiles.length} Indian developers who skipped LinkedIn today.</p>
         </div>
 
-        {loading ? (
+        {!initialLoaded && loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-[#c8f060]" />
           </div>
@@ -69,7 +71,7 @@ export default function DashboardPage() {
             <button onClick={() => fetchProfiles({})} className="text-[#c8f060] hover:underline text-sm mt-2">Clear filters</button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
             {profiles.map(profile => (
               <DeveloperCard 
                 key={profile.id} 
