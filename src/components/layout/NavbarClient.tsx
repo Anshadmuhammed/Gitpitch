@@ -31,7 +31,7 @@ export function NavbarClient({ session, role }: { session: any, role?: string | 
           ) : (
             <>
               <Link href={dashboardHref} className="text-white/60 hover:text-white transition-colors">
-                Dashboard
+                {role === 'developer' ? 'My Profile' : 'Dashboard'}
               </Link>
               <LogoutButton />
             </>
@@ -74,7 +74,7 @@ export function NavbarClient({ session, role }: { session: any, role?: string | 
                 onClick={() => setIsOpen(false)}
                 className="text-lg text-white/70 hover:text-white py-2"
               >
-                Dashboard
+                {role === 'developer' ? 'My Profile' : 'Dashboard'}
               </Link>
               <div onClick={() => setIsOpen(false)}>
                 <LogoutButton />
