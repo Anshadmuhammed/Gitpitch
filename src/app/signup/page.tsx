@@ -76,8 +76,10 @@ export default function SignupPage() {
     }
   };
 
-  const handleOAuth = async () => {
-    // We pass the role in the redirect URL so the callback can capture it
+  const handleGoogleSignup = async () => {
+    // Save role to localStorage before OAuth redirect
+    localStorage.setItem('pendingRole', selectedRole);
+    
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { 
@@ -102,7 +104,7 @@ export default function SignupPage() {
         </div>
 
         <button 
-          onClick={handleOAuth}
+          onClick={handleGoogleSignup}
           className="w-full btn-ghost flex items-center justify-center gap-3 mb-6"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">

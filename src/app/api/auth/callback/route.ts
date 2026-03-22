@@ -47,19 +47,29 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (user) {
-        // Check role in users table
-        const { data: userData } = await supabase
+        // Check if user already exists in our users table
+        const { data: existingUser } = await supabase
           .from('users')
-          .select('role')
+          .select('id, role')
           .eq('id', user.id)
           .single()
-        
-        console.log('User role:', userData?.role)
-        
-        if (!userData || !userData.role) {
-          // New user - send to onboarding
-          return NextResponse.redirect(new URL('/onboarding/recruiter', origin))
-        } else if (userData.role === 'developer') {
+
+        if (!existingUser) {
+          // New user - create record with role
+          await supabase.from('users').insert({
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata?.full_name || user.email,
+            avatar_url: user.user_metadata?.avatar_url,
+            role: role // from URL param
+          })
+        }
+
+        // Get final role (existing or newly created)
+        const finalRole = existingUser?.role || role
+
+        // Redirect based on role
+        if (finalRole === 'developer') {
           return NextResponse.redirect(new URL('/developer', origin))
         } else {
           return NextResponse.redirect(new URL('/dashboard', origin))
