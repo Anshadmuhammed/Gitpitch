@@ -28,6 +28,8 @@ export default function DeveloperPage() {
         .from('developer_profiles')
         .select(`*`)
         .eq('user_id', user.id)
+        .order('id', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (data) {
@@ -79,18 +81,26 @@ export default function DeveloperPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user || !profile) return;
 
-    await supabase
-      .from('developer_profiles')
-      .update({
-        open_to_work: openToWork,
-        salary_expectation: salary[0],
-        preferred_cities: selectedCities,
-        preferred_roles: selectedRoles
-      })
-      .eq('github_username', profile.github_username);
-      
-    setSaving(false);
-    alert("Preferences saved!");
+    try {
+      const { error } = await supabase
+        .from('developer_profiles')
+        .update({
+          open_to_work: openToWork,
+          salary_expectation: salary[0],
+          preferred_cities: selectedCities,
+          preferred_roles: selectedRoles
+        })
+        .eq('user_id', user.id);
+        
+      if (error) {
+        console.error(error);
+        alert(`Failed to save preferences: ${error.message}`);
+      } else {
+        alert("Preferences saved successfully!");
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {

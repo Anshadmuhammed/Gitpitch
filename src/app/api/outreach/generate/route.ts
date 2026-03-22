@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 import { createClient } from '@/utils/supabase/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+// OpenAI is initialized inside the handler to prevent build-time errors when API key is missing
 
 export async function POST(request: Request) {
   try {
@@ -39,6 +40,10 @@ First line is subject, then ---, then body.
 End with a low-pressure CTA.
   `
 
+    const openai = new OpenAI({ 
+      apiKey: process.env.OPENAI_API_KEY || 'dummy_key_for_build' 
+    })
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -51,23 +56,28 @@ End with a low-pressure CTA.
 
     const text = response.choices[0].message.content || ''
     const parts = text.split('---')
-    const subject = parts[0].replace('Subject:', '').trim()
-    const body = parts.slice(1).join('').trim()
+    const subject = parts[Part_index()]?.replace('Subject:', '').trim() || `Outreach to ${dev.github_username}`
+    const body = parts.length > 1 ? parts.slice(1).join('').trim() : parts[0].trim()
+
+    function Part_index() {
+      if (parts.length > 1) return 0
+      return -1
+    }
 
     const { data: { user } } = await supabase.auth.getUser()
-    const { data: recruiter } = await supabase
-      .from('recruiter_profiles')
-      .select('id')
-      .eq('user_id', user?.id)
-      .single()
-
-    const { data: campaign } = await supabase.from('outreach_campaigns').insert({
-      recruiter_id: recruiter?.id,
+    
+    // We link directly to user id since recruiter_profiles might be deprecated in favor of users table
+    const { data: campaign, error: campaignError } = await supabase.from('outreach_campaigns').insert({
+      recruiter_id: user?.id,
       developer_id,
       subject,
       body,
       status: 'draft'
     }).select('id').single()
+
+    if (campaignError) {
+       console.error('Campaign save error:', campaignError)
+    }
 
     return NextResponse.json({ id: campaign?.id, subject, body })
   } catch (err: any) {

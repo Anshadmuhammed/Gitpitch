@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 import { BrevoClient } from '@getbrevo/brevo'
 import { createServer } from '@/lib/supabase/server'
 

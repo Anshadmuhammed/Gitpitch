@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 import { createServer } from '@/lib/supabase/server'
 import { fetchGitHubProfile } from '@/lib/github'
 
@@ -20,31 +21,110 @@ export async function POST(request: Request) {
     // Fetch the raw profile data from GitHub
     const profileData = await fetchGitHubProfile(username)
 
-    // Upsert into Supabase
-    // We match the user_id and github_username to either update or create
-    const { data, error } = await supabase.from('developer_profiles').upsert({
-      user_id: session.user.id,
-      github_username: profileData.github_username,
-      github_id: profileData.github_id,
-      bio: profileData.bio,
-      location: profileData.location,
-      city: profileData.city,
-      followers: profileData.followers,
-      total_stars: profileData.total_stars,
-      top_languages: profileData.top_languages,
-      top_repos: profileData.top_repos,
-      github_raw: profileData.github_raw,
-      last_synced_at: profileData.last_synced_at,
-    }, { onConflict: 'github_username' }).select().single()
+    // Robust manual sync logic that handles potential duplicates gracefully
+    
+    // 1. Check if ANY profile already exists for this user_id
+    const { data: userProfiles } = await supabase
+      .from('developer_profiles')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
 
-    if (error) {
-      console.error('Database Sync Error:', error)
-      return NextResponse.json({ error: 'Failed to sync to database' }, { status: 500 })
+    const existingById = userProfiles?.[0]
+
+    if (existingById) {
+      // Update the most recent profile for this user
+      const { data, error } = await supabase
+        .from('developer_profiles')
+        .update({
+          github_username: profileData.github_username,
+          github_id: profileData.github_id,
+          bio: profileData.bio,
+          location: profileData.location,
+          city: profileData.city,
+          followers: profileData.followers,
+          total_stars: profileData.total_stars,
+          top_languages: profileData.top_languages,
+          top_repos: profileData.top_repos,
+          github_raw: profileData.github_raw,
+          last_synced_at: profileData.last_synced_at,
+        })
+        .eq('id', existingById.id)
+        .select()
+        .limit(1)
+        .maybeSingle()
+
+      if (error) throw error
+      return NextResponse.json({ success: true, profile: data })
     }
 
+    // 2. Check if a profile exists for this github_username (synced anonymously before)
+    const { data: usernameProfiles } = await supabase
+      .from('developer_profiles')
+      .select('id')
+      .eq('github_username', profileData.github_username)
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    const existingByUsername = usernameProfiles?.[0]
+
+    if (existingByUsername) {
+      // Link the existing username profile to this Gitpitch user_id
+      const { data, error } = await supabase
+        .from('developer_profiles')
+        .update({
+          user_id: session.user.id,
+          github_id: profileData.github_id,
+          bio: profileData.bio,
+          location: profileData.location,
+          city: profileData.city,
+          followers: profileData.followers,
+          total_stars: profileData.total_stars,
+          top_languages: profileData.top_languages,
+          top_repos: profileData.top_repos,
+          github_raw: profileData.github_raw,
+          last_synced_at: profileData.last_synced_at,
+        })
+        .eq('id', existingByUsername.id)
+        .select()
+        .limit(1)
+        .maybeSingle()
+
+      if (error) throw error
+      return NextResponse.json({ success: true, profile: data })
+    }
+
+    // 3. Create a brand new profile
+    const { data, error } = await supabase
+      .from('developer_profiles')
+      .insert({
+        user_id: session.user.id,
+        github_username: profileData.github_username,
+        github_id: profileData.github_id,
+        bio: profileData.bio,
+        location: profileData.location,
+        city: profileData.city,
+        followers: profileData.followers,
+        total_stars: profileData.total_stars,
+        top_languages: profileData.top_languages,
+        top_repos: profileData.top_repos,
+        github_raw: profileData.github_raw,
+        last_synced_at: profileData.last_synced_at,
+      })
+      .select()
+      .limit(1)
+      .maybeSingle()
+
+    if (error) throw error
     return NextResponse.json({ success: true, profile: data })
+
   } catch (error: any) {
-    console.error('GitHub Sync Error:', error)
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 })
+    console.error('GITHUB_SYNC_CRASH:', error)
+    return NextResponse.json({ 
+      error: `Database sync failed: ${error.message}`,
+      details: error.details,
+      hint: 'If you see duplicates, try refreshing. We are working on cleaning up duplicate profile entries.'
+    }, { status: 500 })
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 import crypto from 'crypto'
 
 export async function POST(request: Request) {

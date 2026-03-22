@@ -40,7 +40,7 @@ export default function DeveloperSettingsPage() {
 
       const [userRes, profileRes] = await Promise.all([
         supabase.from('users').select('*').eq('id', user.id).single(),
-        supabase.from('developer_profiles').select('*').eq('user_id', user.id).maybeSingle()
+        supabase.from('developer_profiles').select('*').eq('user_id', user.id).order('id', { ascending: false }).limit(1).maybeSingle()
       ]);
 
       if (userRes.data) setUserData(userRes.data);

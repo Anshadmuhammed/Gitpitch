@@ -1,0 +1,83 @@
+﻿
+> gitpitch@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+node.exe : ΓÜá The 
+"middleware" file 
+convention is 
+deprecated. Please use 
+"proxy" instead. Learn 
+more: https://nextjs.or
+g/docs/messages/middlew
+are-to-proxy
+At C:\Program Files\nod
+ejs\npm.ps1:29 char:3
++   & $NODE_EXE 
+$NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (ΓÜá The "midd   
+ le...leware-to-pro    
+xy:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 11.6s
+  Running TypeScript ...
+  Collecting page data using 11 workers ...
+Error: Missing 
+credentials. Please 
+pass an `apiKey`, or 
+set the 
+`OPENAI_API_KEY` 
+environment variable.
+    at 
+instantiateModule (C:\U
+sers\anuan\OneDrive\Des
+ktop\gitpitch main\gitp
+itch\.next\server\chunk
+s\[turbopack]_runtime.j
+s:740:9)
+    at instantiateRunti
+meModule (C:\Users\anua
+n\OneDrive\Desktop\gitp
+itch main\gitpitch\.nex
+t\server\chunks\[turbop
+ack]_runtime.js:768:12)
+    at getOrInstantiate
+RuntimeModule (C:\Users
+\anuan\OneDrive\Desktop
+\gitpitch main\gitpitch
+\.next\server\chunks\[t
+urbopack]_runtime.js:78
+1:12)
+    at Object.m (C:\Use
+rs\anuan\OneDrive\Deskt
+op\gitpitch main\gitpit
+ch\.next\server\chunks\
+[turbopack]_runtime.js:
+790:18)
+    at 
+Object.<anonymous> (C:\
+Users\anuan\OneDrive\De
+sktop\gitpitch main\git
+pitch\.next\server\app\
+api\outreach\generate\r
+oute.js:8:3)
+
+> Build error occurred
+Error: Failed to 
+collect page data for 
+/api/outreach/generate
+    at ignore-listed 
+frames {
+  type: 'Error'
+}

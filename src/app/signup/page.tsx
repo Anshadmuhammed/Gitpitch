@@ -43,19 +43,32 @@ export default function SignupPage() {
     });
 
     if (authError) {
-      setError(authError.message);
+      const errorMessages: Record<string, string> = {
+        'User already registered': 'An account with this email already exists. Try logging in.',
+        'Invalid email': 'Please enter a valid email address.',
+        'Password should be at least 6 characters': 'Password must be at least 6 characters.',
+      };
+      // For rate limits like "Email rate limit exceeded" we just show the message or a fallback
+      setError(errorMessages[authError.message] || authError.message || 'Something went wrong. Please try again.');
       setLoading(false);
       return;
     }
 
     if (authData.user) {
-      // 2. Insert into users table
-      await supabase.from("users").insert({
+      // 2. Upsert into users table (robust against retries)
+      const { error: upsertError } = await supabase.from("users").upsert({
         id: authData.user.id,
         email: data.email,
         name: data.name,
         role: data.role
       });
+
+      if (upsertError) {
+        console.error('User persistence error:', upsertError)
+        setError("Account created, but failed to save profile. Please try logging in.");
+        setLoading(false);
+        return;
+      }
 
       // 3. Redirect to onboarding
       router.push(`/onboarding/${data.role}`);
@@ -64,12 +77,11 @@ export default function SignupPage() {
   };
 
   const handleOAuth = async () => {
-    // For OAuth, we default to recruiter or use a state
+    // We pass the role in the redirect URL so the callback can capture it
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { 
-        redirectTo: `${window.location.origin}/api/auth/callback`,
-        queryParams: { role: selectedRole }
+        redirectTo: `${window.location.origin}/api/auth/callback?role=${selectedRole}`,
       }
     });
   };

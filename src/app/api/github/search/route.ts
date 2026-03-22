@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 import { createClient } from '@/utils/supabase/server'
 
 export async function GET(request: Request) {
