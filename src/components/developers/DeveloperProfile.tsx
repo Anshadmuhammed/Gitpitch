@@ -49,6 +49,7 @@ export function DeveloperProfile({
                   <img 
                     src={profile.users?.avatar_url || profile.github_raw?.user?.avatar_url} 
                     alt={profile.github_username}
+                    loading="lazy"
                     className="w-full h-full object-cover" 
                   />
                 ) : (
@@ -110,20 +111,20 @@ export function DeveloperProfile({
                  <div className="text-white/30 text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5">
                    <Code2 size={12} className="text-[#c8f060]"/> Main Tech
                  </div>
-                 <div className="text-sm font-medium pt-0.5 truncate">{profile.top_languages?.[0] || 'N/A'}</div>
+                 <div className="text-sm font-medium pt-0.5 truncate">{Array.isArray(profile?.top_languages) ? profile.top_languages[0] : 'N/A'}</div>
                </div>
                <div className="bg-[#0a0a08] p-4 rounded-xl border border-white/5">
                  <div className="text-white/30 text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5">
                    <GitFork size={12} className="text-[#c8f060]"/> Repos
                  </div>
-                 <div className="text-xl font-medium">{profile.top_repos?.length || 0}</div>
+                 <div className="text-xl font-medium">{Array.isArray(profile?.top_repos) ? profile.top_repos.length : 0}</div>
                </div>
             </div>
 
             <div className="mb-10">
                <h3 className="text-xs font-semibold text-white/30 uppercase tracking-[0.2em] mb-4">Top Languages</h3>
                <div className="flex flex-wrap gap-2.5">
-                 {profile.top_languages?.map((lang) => (
+                 {(Array.isArray(profile?.top_languages) ? profile.top_languages : []).map((lang: string) => (
                    <span key={lang} className="px-3.5 py-1.5 bg-[#c8f060]/5 border border-[#c8f060]/10 rounded-full text-xs text-white/90 flex items-center gap-2 font-medium">
                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getLanguageColor(lang) }}></span>
                      {lang}
@@ -138,7 +139,7 @@ export function DeveloperProfile({
                  <span className="h-px bg-white/5 flex-1 ml-4"></span>
                </h3>
                <div className="space-y-4">
-                 {profile.top_repos?.slice(0, 5).map((repo: any) => (
+                 {(Array.isArray(profile?.top_repos) ? profile.top_repos : []).slice(0, 5).map((repo: any) => (
                    <div key={repo.name} className="group bg-[#080807] p-5 rounded-xl border border-white/5 hover:border-[#c8f060]/20 transition-all">
                      <div className="flex justify-between items-start mb-2.5">
                        <a href={repo.url} target="_blank" rel="noreferrer" className="text-lg font-medium text-white group-hover:text-[#c8f060] transition-colors flex items-center gap-2">

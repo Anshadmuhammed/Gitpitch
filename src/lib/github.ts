@@ -18,9 +18,11 @@ export async function fetchGitHubProfile(username: string) {
   const repos = await reposRes.json()
 
   const langCount: Record<string, number> = {}
-  repos.forEach((r: any) => {
-    if (r.language) langCount[r.language] = (langCount[r.language] || 0) + 1
-  })
+  if (Array.isArray(repos)) {
+    repos.forEach((r: any) => {
+      if (r.language) langCount[r.language] = (langCount[r.language] || 0) + 1
+    })
+  }
 
   const topLanguages = Object.entries(langCount)
     .sort((a, b) => b[1] - a[1]).slice(0, 5).map(([l]) => l)
@@ -32,12 +34,12 @@ export async function fetchGitHubProfile(username: string) {
     location: user.location || '',
     city: extractCity(user.location || ''),
     followers: user.followers,
-    total_stars: repos.reduce((s: number, r: any) => s + r.stargazers_count, 0),
+    total_stars: Array.isArray(repos) ? repos.reduce((s: number, r: any) => s + (r.stargazers_count || 0), 0) : 0,
     top_languages: topLanguages,
-    top_repos: repos.slice(0, 5).map((r: any) => ({
+    top_repos: Array.isArray(repos) ? repos.slice(0, 5).map((r: any) => ({
       name: r.name, description: r.description,
       stars: r.stargazers_count, url: r.html_url, language: r.language
-    })),
+    })) : [],
     github_raw: { user, repos },
     last_synced_at: new Date().toISOString()
   }

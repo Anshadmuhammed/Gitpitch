@@ -179,7 +179,7 @@ export default function DeveloperPage() {
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center overflow-hidden">
                       {profile.github_raw?.user?.avatar_url ? (
-                        <img src={profile.github_raw.user.avatar_url} alt="" className="w-full h-full object-cover" />
+                        <img src={profile.github_raw.user.avatar_url} alt="" loading="lazy" className="w-full h-full object-cover" />
                       ) : (
                         <Github size={24} />
                       )}

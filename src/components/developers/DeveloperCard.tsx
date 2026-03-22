@@ -41,6 +41,7 @@ export function DeveloperCard({
             <img 
               src={profile.users?.avatar_url || profile.github_raw?.user?.avatar_url} 
               alt={profile.github_username}
+              loading="lazy"
               className="w-full h-full object-cover" 
             />
           ) : (
@@ -67,7 +68,7 @@ export function DeveloperCard({
       </div>
 
       <div className="flex flex-wrap gap-1.5 mb-4 max-h-16 overflow-hidden">
-        {profile.top_languages?.slice(0, 4).map((lang) => (
+        {(Array.isArray(profile?.top_languages) ? profile.top_languages : []).slice(0, 4).map((lang: string) => (
           <span key={lang} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/70 flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getLanguageColor(lang) }}></span>
             {lang}
@@ -76,7 +77,7 @@ export function DeveloperCard({
       </div>
 
       <div className="mt-auto pt-4 border-t border-white/5 space-y-3">
-        {profile.top_repos?.[0] && (
+        {(Array.isArray(profile?.top_repos) ? profile.top_repos : [])[0] && (
           <div className="text-xs text-white/60 font-mono truncate bg-[#0a0a08] p-2 rounded border border-white/5">
             <span className="text-[#c8f060]">★ {formatNumber(profile.top_repos[0].stars)}</span> {profile.top_repos[0].name}
           </div>

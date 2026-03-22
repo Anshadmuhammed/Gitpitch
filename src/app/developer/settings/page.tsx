@@ -126,7 +126,7 @@ export default function DeveloperSettingsPage() {
             <div className="flex items-center gap-6 mb-8">
               <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
                 {profile?.github_raw?.user?.avatar_url ? (
-                  <img src={profile.github_raw.user.avatar_url} alt="" className="w-full h-full object-cover" />
+                  <img src={profile.github_raw.user.avatar_url} alt="" loading="lazy" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-white/20"><User size={32} /></div>
                 )}

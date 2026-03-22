@@ -43,70 +43,29 @@ export async function GET(request: Request) {
 
     console.log('Exchange result:', error ? 'error: ' + error.message : 'success')
 
-    if (error) {
-      console.error('Supabase auth error:', error)
-      return NextResponse.redirect(`${origin}/login?error=${error.message}`)
-    }
-
-    if (data.user) {
-      // Check if user already exists in our table
-      const { data: userData, error: userFetchError } = await supabase
-        .from('users')
-        .select('role, company_name')
-        .eq('id', data.user.id)
-        .maybeSingle()
-
-      let finalRole = userData?.role || role
-      let isOnboarded = !!userData?.company_name
-      let isNewUser = false
-
-      if (!userData && !userFetchError) {
-        // New user or missing profile! Persist them.
-        isNewUser = true
-        console.log('OAuth user needs persistence, creating/syncing record with role:', role)
-        const { error: upsertError } = await supabase.from('users').upsert({
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.user_metadata.full_name || data.user.email?.split('@')[0],
-          role: role
-        })
+    if (!error) {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        // Check role in users table
+        const { data: userData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single()
         
-        if (upsertError) {
-          console.error('Error upserting user record:', upsertError)
+        console.log('User role:', userData?.role)
+        
+        if (!userData || !userData.role) {
+          // New user - send to onboarding
+          return NextResponse.redirect(new URL('/onboarding/recruiter', origin))
+        } else if (userData.role === 'developer') {
+          return NextResponse.redirect(new URL('/developer', origin))
+        } else {
+          return NextResponse.redirect(new URL('/dashboard', origin))
         }
-        finalRole = role
-        isOnboarded = false
-      }
-
-      console.log('User status:', { finalRole, isOnboarded, isNewUser })
-
-      // For developers, check if they have a profile synced
-      if (finalRole === 'developer') {
-        const { data: devProfile } = await supabase
-          .from('developer_profiles')
-          .select('id')
-          .eq('user_id', data.user.id)
-          .maybeSingle()
-        
-        isOnboarded = !!devProfile
-      }
-
-      // Final defensive check to prevent redirecting to "/onboarding/undefined"
-      const safeRole = (finalRole === 'developer' || finalRole === 'recruiter') ? finalRole : 'recruiter'
-
-      // If it's a new user or they haven't onboarded, send them to onboarding
-      if (isNewUser || !isOnboarded) {
-        console.log('Redirecting to onboarding for role:', safeRole)
-        return NextResponse.redirect(`${origin}/onboarding/${safeRole}`)
-      }
-
-      // Existing user redirection
-      if (safeRole === 'developer') {
-        return NextResponse.redirect(`${origin}/developer`)
       }
     }
-
-    return NextResponse.redirect(`${origin}/dashboard`)
 
   } catch (err) {
     console.error('Callback route crashed:', err)

@@ -45,9 +45,11 @@ export default function LoginPage() {
           .single();
 
         if (userData?.role === 'developer') {
-          router.push("/developer");
+          router.push('/developer');
+        } else if (userData?.role === 'recruiter') {
+          router.push('/dashboard');
         } else {
-          router.push("/dashboard");
+          router.push('/onboarding/recruiter');
         }
         router.refresh();
       }

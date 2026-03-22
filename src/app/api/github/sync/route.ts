@@ -18,21 +18,30 @@ export async function POST(request: Request) {
        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Fetch the raw profile data from GitHub
-    const profileData = await fetchGitHubProfile(username)
-
-    // Robust manual sync logic that handles potential duplicates gracefully
-    
-    // 1. Check if ANY profile already exists for this user_id
+    // Cache check BEFORE fetching from GitHub
     const { data: userProfiles } = await supabase
       .from('developer_profiles')
-      .select('id')
+      .select('*') // need all data for early return
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
       .limit(1)
 
     const existingById = userProfiles?.[0]
 
+    if (existingById?.last_synced_at) {
+      const hoursAgo = (new Date().getTime() - new Date(existingById.last_synced_at).getTime()) / (1000 * 60 * 60)
+      if (hoursAgo < 24) {
+        return NextResponse.json({ success: true, profile: existingById, cached: true })
+      }
+    }
+
+    // Fetch the raw profile data from GitHub if cache missed
+    const profileData = await fetchGitHubProfile(username)
+
+    // Robust manual sync logic that handles potential duplicates gracefully
+    
+    // 1. Check if ANY profile already exists for this user_id
+    // Already retrieved above in existingById
     if (existingById) {
       // Update the most recent profile for this user
       const { data, error } = await supabase

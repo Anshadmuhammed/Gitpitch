@@ -20,7 +20,11 @@ export default function SettingsPage() {
         .eq('id', session.user.id)
         .single();
 
-      if (data) setProfile(data);
+      if (data) {
+        setProfile(data);
+      } else {
+        setProfile({});
+      }
       setLoading(false);
     };
     fetchProfile();

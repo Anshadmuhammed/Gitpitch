@@ -81,6 +81,7 @@ export default function OutreachPage() {
                            <img 
                             src={camp.developer_profiles?.github_raw?.user?.avatar_url} 
                             alt={camp.developer_profiles?.github_username}
+                            loading="lazy"
                             className="w-full h-full object-cover"
                            />
                         </div>
