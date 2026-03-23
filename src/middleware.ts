@@ -9,9 +9,7 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
+        getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
@@ -27,33 +25,26 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const pathname = request.nextUrl.pathname
+  const path = request.nextUrl.pathname
 
-  // Protected routes check
-  if (!user && (pathname.startsWith('/dashboard') || pathname.startsWith('/developer') || pathname.startsWith('/onboarding'))) {
+  // Redirect unauthenticated users to login
+  if (!user && (path.startsWith('/dashboard') || path.startsWith('/developer'))) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (user) {
-    // Get user role from public.users table
+  // Role-based protection for authenticated users
+  if (user && (path.startsWith('/dashboard') || path.startsWith('/developer'))) {
     const { data: userData } = await supabase
       .from('users')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    const role = userData?.role
-
-    // If user is logged in and tries to access login/signup, redirect to their dashboard
-    if (pathname === '/login' || pathname === '/signup') {
-      return NextResponse.redirect(new URL(role === 'developer' ? '/developer' : '/dashboard', request.url))
-    }
-
-    // Role-based path protection
-    if (role === 'developer' && pathname.startsWith('/dashboard')) {
+    if (userData?.role === 'developer' && path.startsWith('/dashboard')) {
       return NextResponse.redirect(new URL('/developer', request.url))
     }
-    if (role === 'recruiter' && pathname.startsWith('/developer')) {
+
+    if (userData?.role === 'recruiter' && path.startsWith('/developer')) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }
@@ -62,5 +53,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
 }
